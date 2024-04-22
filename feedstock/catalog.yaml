@@ -1,9 +1,9 @@
 # All the information important to cataloging.
 "ncviewjs:meta_yaml_url": "https://github.com/leap-stc/casm_feedstock/blob/main/feedstock/meta.yaml"
 tags:
-  - my-custom-tag
+  - precipitation
   - zarr
 stores:
   - id: "casm"
     name: "CASM"
-    url: "gs://leap-scratch/data-library/feedstocks/latest/casm_feedstock/casm.zarr"
+    url: "gs://leap-persistent-ro/data-library/feedstocks/latest/casm_feedstock/casm.zarr"
