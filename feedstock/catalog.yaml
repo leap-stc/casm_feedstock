@@ -6,4 +6,4 @@ tags:
 stores:
   - id: "casm"
     name: "CASM"
-    url: "gs://leap-scratch/data-library/feedstocks/latest/proto_feedstock/small.zarr"
+    url: "gs://leap-scratch/data-library/feedstocks/latest/casm_feedstock/casm.zarr"
