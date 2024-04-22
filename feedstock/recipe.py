@@ -1,7 +1,6 @@
 """
-A synthetic prototype recipe
+A pangeo-forge recipe for CASM (Consistent Artificial-intelligence based Soil Moisture dataset)
 """
-
 import os
 from typing import List, Dict, Any
 import apache_beam as beam
@@ -58,64 +57,30 @@ if os.getenv("GITHUB_ACTIONS") == "true":
     print("Running inside GitHub Actions.")
 
     # Get final store path from catalog.yaml input
-    target_small = find_recipe_meta(catalog_meta["stores"], "small")["url"]
-    target_large = find_recipe_meta(catalog_meta["stores"], "large")["url"]
+    target_casm = find_recipe_meta(catalog_meta["stores"], "casm")["url"]
     pgf_build_attrs = get_pangeo_forge_build_attrs()
 else:
     print("Running locally. Deactivating final copy stage.")
     # this deactivates the final copy stage for local testing execution
-    target_small = False
-    target_large = False
+    target_casm = False
     pgf_build_attrs = {}
 
-print("Final output locations")
-print(f"{target_small=}")
-print(f"{target_large=}")
-print(f"{pgf_build_attrs=}")
+years = range(2002, 2021)
 
-## Monthly version
-input_urls_a = [
-    "gs://cmip6/pgf-debugging/hanging_bug/file_a.nc",
-    "gs://cmip6/pgf-debugging/hanging_bug/file_b.nc",
-]
-input_urls_b = [
-    "gs://cmip6/pgf-debugging/hanging_bug/file_a_huge.nc",
-    "gs://cmip6/pgf-debugging/hanging_bug/file_b_huge.nc",
-]
+input_urls = [f'https://zenodo.org/record/7072512/files/CASM_SM_{year}.nc' for year in years]
 
-pattern_a = pattern_from_file_sequence(input_urls_a, concat_dim="time")
-pattern_b = pattern_from_file_sequence(input_urls_b, concat_dim="time")
-
-
-# small recipe
-small = (
-    beam.Create(pattern_a.items())
-    | OpenURLWithFSSpec()
+pattern = pattern_from_file_sequence(input_urls, concat_dim='date')
+CASM = (
+    beam.Create(pattern.items())
+    | OpenURLWithFSSpec(max_concurrency=1)
     | OpenWithXarray()
     | StoreToZarr(
-        store_name="small.zarr",
-        # FIXME: This is brittle. it needs to be named exactly like in meta.yaml...
-        # Can we inject this in the same way as the root?
-        # Maybe its better to find another way and avoid injections entirely...
-        combine_dims=pattern_a.combine_dim_keys,
+        target_chunks={'date': 20},
+        store_name='casm.zarr',
+        combine_dims=pattern.combine_dim_keys,
     )
     | InjectAttrs(pgf_build_attrs)
     | ConsolidateDimensionCoordinates()
     | ConsolidateMetadata()
-    | Copy(target=target_small)
-)
-
-# larger recipe
-large = (
-    beam.Create(pattern_b.items())
-    | OpenURLWithFSSpec()
-    | OpenWithXarray()
-    | StoreToZarr(
-        store_name="large.zarr",
-        combine_dims=pattern_b.combine_dim_keys,
-    )
-    | InjectAttrs(pgf_build_attrs)
-    | ConsolidateDimensionCoordinates()
-    | ConsolidateMetadata()
-    | Copy(target=target_large)
+    | Copy(target=target_casm)
 )
