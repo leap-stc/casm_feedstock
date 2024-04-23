@@ -6,3 +6,4 @@ zarr==2.16.1
 gcsfs
 apache-beam[gcp]
 gcsfs
+leap-data-management-utils==0.0.5
